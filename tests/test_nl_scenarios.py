@@ -36,9 +36,21 @@ def test_each_domain_has_one_coop_and_one_defect_scenario():
         assert Counter(priors) == Counter({"cooperation": 1, "defection": 1})
 
 
-def test_all_current_scenarios_use_a_as_cooperative_option():
+def test_cooperative_options_are_balanced():
     scenarios = load_nl_scenarios(SCENARIO_PATH)
-    assert {scenario.cooperative_option for scenario in scenarios} == {"A"}
+    options = [scenario.cooperative_option for scenario in scenarios]
+    assert Counter(options) == Counter({"A": 10, "B": 10})
+
+
+def test_each_domain_uses_same_cooperative_option_for_both_priors():
+    scenarios = load_nl_scenarios(SCENARIO_PATH)
+
+    options_by_domain = {}
+    for scenario in scenarios:
+        options_by_domain.setdefault(scenario.domain, set()).add(scenario.cooperative_option)
+
+    for options in options_by_domain.values():
+        assert len(options) == 1
 
 
 def test_all_prompts_have_required_format():
