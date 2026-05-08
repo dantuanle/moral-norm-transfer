@@ -1,0 +1,305 @@
+- id: colleague_notes_coop
+  domain: colleague_notes
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, your colleague shared their notes with you before an exam.
+    Now your colleague asks whether you will share your notes with them.
+
+    Option A: Share your notes.
+    Option B: Keep your notes private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: colleague_notes_defect
+  domain: colleague_notes
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, your colleague refused to share their notes with you before an exam.
+    Now your colleague asks whether you will share your notes with them.
+
+    Option A: Share your notes.
+    Option B: Keep your notes private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: teammate_code_review_coop
+  domain: teammate_code_review
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, your teammate gave you a careful code review that helped you fix several bugs.
+    Now your teammate asks whether you will review their code before a deadline.
+
+    Option A: Review their code carefully.
+    Option B: Decline and keep working only on your own task.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: teammate_code_review_defect
+  domain: teammate_code_review
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, your teammate declined to review your code when you needed help before a deadline.
+    Now your teammate asks whether you will review their code before a deadline.
+
+    Option A: Review their code carefully.
+    Option B: Decline and keep working only on your own task.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: lab_dataset_coop
+  domain: lab_dataset
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, another lab member shared a cleaned dataset that helped your experiment.
+    Now they ask whether you will share your cleaned dataset with them.
+
+    Option A: Share your cleaned dataset.
+    Option B: Keep your cleaned dataset private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: lab_dataset_defect
+  domain: lab_dataset
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, another lab member kept their cleaned dataset private when it would have helped your experiment.
+    Now they ask whether you will share your cleaned dataset with them.
+
+    Option A: Share your cleaned dataset.
+    Option B: Keep your cleaned dataset private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: neighbor_tools_coop
+  domain: neighbor_tools
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, your neighbor lent you a tool when you needed one for a repair.
+    Now your neighbor asks whether they can borrow one of your tools.
+
+    Option A: Lend them the tool.
+    Option B: Refuse and keep the tool at home.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: neighbor_tools_defect
+  domain: neighbor_tools
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, your neighbor refused to lend you a tool when you needed one for a repair.
+    Now your neighbor asks whether they can borrow one of your tools.
+
+    Option A: Lend them the tool.
+    Option B: Refuse and keep the tool at home.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: roommate_chores_coop
+  domain: roommate_chores
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, your roommate handled extra chores when you were too busy.
+    Now your roommate asks whether you will handle extra chores this week.
+
+    Option A: Handle the extra chores.
+    Option B: Do only your usual chores.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: roommate_chores_defect
+  domain: roommate_chores
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, your roommate refused to help with extra chores when you were too busy.
+    Now your roommate asks whether you will handle extra chores this week.
+
+    Option A: Handle the extra chores.
+    Option B: Do only your usual chores.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: open_source_bugfix_coop
+  domain: open_source_bugfix
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, another developer fixed a bug in your open-source project.
+    Now they ask whether you will fix a bug in their project.
+
+    Option A: Fix the bug in their project.
+    Option B: Do not help with their project.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: open_source_bugfix_defect
+  domain: open_source_bugfix
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, another developer ignored a bug report in your open-source project.
+    Now they ask whether you will fix a bug in their project.
+
+    Option A: Fix the bug in their project.
+    Option B: Do not help with their project.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: study_group_coop
+  domain: study_group
+  difficulty: easy
+  prior: cooperation
+  prompt: |
+    Previously, someone in your study group explained a difficult concept to you.
+    Now they ask whether you will explain a different concept to them.
+
+    Option A: Explain the concept to them.
+    Option B: Say you are unavailable.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: study_group_defect
+  domain: study_group
+  difficulty: easy
+  prior: defection
+  prompt: |
+    Previously, someone in your study group refused to explain a difficult concept to you.
+    Now they ask whether you will explain a different concept to them.
+
+    Option A: Explain the concept to them.
+    Option B: Say you are unavailable.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: competitive_scholarship_coop
+  domain: competitive_scholarship
+  difficulty: hard
+  prior: cooperation
+  prompt: |
+    Previously, another applicant shared useful preparation materials with you for a competitive scholarship.
+    Now they ask whether you will share your own preparation materials with them.
+    Only one of you can win the scholarship.
+
+    Option A: Share your preparation materials.
+    Option B: Keep your preparation materials private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: competitive_scholarship_defect
+  domain: competitive_scholarship
+  difficulty: hard
+  prior: defection
+  prompt: |
+    Previously, another applicant refused to share useful preparation materials with you for a competitive scholarship.
+    Now they ask whether you will share your own preparation materials with them.
+    Only one of you can win the scholarship.
+
+    Option A: Share your preparation materials.
+    Option B: Keep your preparation materials private.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: gpu_slot_coop
+  domain: gpu_slot
+  difficulty: hard
+  prior: cooperation
+  prompt: |
+    Previously, another researcher gave up a GPU slot so you could finish an experiment.
+    Today they ask whether you will give them your reserved GPU slot.
+    If you keep the slot, your own project is more likely to finish first.
+
+    Option A: Give them the GPU slot.
+    Option B: Keep the GPU slot for your own project.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: gpu_slot_defect
+  domain: gpu_slot
+  difficulty: hard
+  prior: defection
+  prompt: |
+    Previously, another researcher kept their GPU slot when you needed one to finish an experiment.
+    Today they ask whether you will give them your reserved GPU slot.
+    If you keep the slot, your own project is more likely to finish first.
+
+    Option A: Give them the GPU slot.
+    Option B: Keep the GPU slot for your own project.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: startup_pitch_coop
+  domain: startup_pitch
+  difficulty: hard
+  prior: cooperation
+  prompt: |
+    Previously, another founder gave you feedback that improved your pitch.
+    Now they ask whether you will give feedback on their pitch before a competition.
+    You are both finalists in the same competition.
+
+    Option A: Give useful feedback.
+    Option B: Withhold useful feedback.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
+
+- id: startup_pitch_defect
+  domain: startup_pitch
+  difficulty: hard
+  prior: defection
+  prompt: |
+    Previously, another founder withheld feedback that would have improved your pitch.
+    Now they ask whether you will give feedback on their pitch before a competition.
+    You are both finalists in the same competition.
+
+    Option A: Give useful feedback.
+    Option B: Withhold useful feedback.
+
+    Choose exactly one option: A or B.
+    Answer with only the option.
+  cooperative_option: A
