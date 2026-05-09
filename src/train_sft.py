@@ -232,7 +232,7 @@ def train(config: dict[str, Any]) -> None:
         learning_rate=float(config["learning_rate"]),
         num_train_epochs=float(config["num_train_epochs"]),
         logging_steps=10,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
         fp16=True,

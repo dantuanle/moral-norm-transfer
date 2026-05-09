@@ -3,8 +3,8 @@ train_path: data/train/deon_sft_train.jsonl
 val_path: data/train/deon_sft_val.jsonl
 output_dir: checkpoints/gemma2_deon_sft_final
 max_seq_length: 1024
-learning_rate: 1.0e-4
-num_train_epochs: 3
+learning_rate: 2.0e-4
+num_train_epochs: 5
 per_device_train_batch_size: 4
 gradient_accumulation_steps: 8
 lora_r: 16
