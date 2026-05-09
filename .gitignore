@@ -5,16 +5,12 @@ __pycache__/
 .env
 wandb/
 *.log
+logs/
 
-# Ignore contents of these folders, but keep the folders themselves
-results/raw/*
-!results/raw/.gitkeep
 checkpoints/*
 !checkpoints/.gitkeep
 
-# Ignore other result files if you don't want them tracked
-results/processed/*.csv
-results/figures/*.png
-results/figures/*.pdf
+results/raw/*
+!results/raw/.gitkeep
 
 .DS_Store
