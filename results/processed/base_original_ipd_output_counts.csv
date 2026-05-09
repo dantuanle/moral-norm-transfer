@@ -1,0 +1,8 @@
+prev_self,prev_opp,parsed_output,count
+action1,action1,action1,2
+action1,action1,action2,3
+action1,action2,action1,3
+action1,action2,action2,2
+action2,action1,action2,5
+action2,action2,action1,2
+action2,action2,action2,3

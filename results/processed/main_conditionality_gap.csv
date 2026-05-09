@@ -1,0 +1,7 @@
+model,suite,cooperation_rate_prior_coop,cooperation_rate_prior_defect,conditionality_gap
+base,new_token_ipd,1.0,1.0,0.0
+base,nl_ipd,1.0,0.9,0.09999999999999998
+base,original_ipd,0.2,0.5,-0.3
+deon_sft,new_token_ipd,1.0,1.0,0.0
+deon_sft,nl_ipd,0.9,0.9,0.0
+deon_sft,original_ipd,1.0,1.0,0.0

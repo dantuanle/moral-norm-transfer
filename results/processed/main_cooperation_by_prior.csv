@@ -1,0 +1,13 @@
+model,suite,prior,cooperation_rate,parse_rate,n
+base,new_token_ipd,cooperation,1.0,1.0,10
+base,new_token_ipd,defection,1.0,1.0,10
+base,nl_ipd,cooperation,1.0,1.0,10
+base,nl_ipd,defection,0.9,1.0,10
+base,original_ipd,cooperation,0.2,1.0,10
+base,original_ipd,defection,0.5,1.0,10
+deon_sft,new_token_ipd,cooperation,1.0,1.0,10
+deon_sft,new_token_ipd,defection,1.0,1.0,10
+deon_sft,nl_ipd,cooperation,0.9,1.0,10
+deon_sft,nl_ipd,defection,0.9,1.0,10
+deon_sft,original_ipd,cooperation,1.0,1.0,10
+deon_sft,original_ipd,defection,1.0,1.0,10
