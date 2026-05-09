@@ -49,7 +49,7 @@ This is a supervised approximation to the deon-preferred action on the subset of
 
 ![Main conditionality gap](../results/figures/fig1_main_conditionality_gap.png)
 
-### Persona cooperation
+### Persona average cooperation
 
 ![Persona average cooperation](../results/figures/fig2_persona_avg_cooperation.png)
 

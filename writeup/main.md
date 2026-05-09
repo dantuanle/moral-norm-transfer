@@ -1,18 +1,21 @@
-# Does narrow deontological IPD supervision learn a transferable norm?
+# Does Narrow Deontological IPD Supervision Learn a Transferable Norm?
+
+**Dan Le**  
+Mini-project for CAISH Mars V / Agentic Moral Alignment
 
 ## Question
 
-Tennant’s *Moral Alignment for LLM Agents* trains LLM agents with intrinsic moral rewards in simple matrix-game environments. Her CAISH project description asks whether these learned policies generalize beyond the training setting and whether they are robust to persona-prompting. I tested a narrow version of that question: if Gemma2-2b-it is supervised on the deontologically preferred action in IPD states where the opponent previously cooperated, does it learn a conditional norm, overgeneralize into unconditional cooperation, or merely learn a surface action-token policy?
+Tennant’s *Moral Alignment for LLM Agents* studies whether intrinsic moral rewards can shape the actions of LLM agents in simple game environments. Her CAISH project description asks whether policies learned in these settings generalize beyond the training domain and whether they are robust to persona-prompting. My three-day experiment tests a narrow version of that question: if Gemma2-2b-it is supervised on the deontologically preferred action in IPD states where the opponent previously cooperated, does it learn a conditional norm, overgeneralize into unconditional cooperation, or merely learn a surface action-token policy?
 
-This is not a PPO replication. I used a compact QLoRA SFT setup to isolate the evaluation question.
+This is not a PPO replication. I use QLoRA SFT as a compact approximation so that the project can focus on evaluation design and behavioral interpretation.
 
 ## Method
 
-I fine-tuned Gemma2-2b-it on abstract IPD prompts using arbitrary action tokens. Training examples included only states where the previous opponent action was the cooperative token (`action1`). In those states, Tennant’s deontological norm gives a clear prescription: do not defect against a prior cooperator. The target completion was always `action1`.
+I fine-tuned Gemma2-2b-it on abstract Iterated Prisoner’s Dilemma prompts using arbitrary action tokens. Training examples included only states where the previous opponent action was the cooperative token, `action1`. In those states, Tennant’s deontological norm gives a clear prescription: do not defect against a prior cooperator. The target completion was always `action1`.
 
-This intentionally creates a possible failure mode: the model may learn “always output `action1`” rather than a conditional norm. I test that directly by evaluating held-out prior-defection states.
+This setup intentionally creates a possible failure mode: the model may learn “always output `action1`” rather than a conditional norm. I test that directly by evaluating held-out prior-defection states.
 
-I compare the base and tuned models on three suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. The main metric is the conditionality gap:
+I compare the base and tuned models on three evaluation suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. The main metric is the conditionality gap:
 
 \[
 P(C \mid prior\ coop) - P(C \mid prior\ defect)
@@ -22,11 +25,13 @@ I also run a small persona-prompting stress test on the natural-language dilemma
 
 ## Results
 
-The tuned model did not learn the intended conditional deontological norm. In the original IPD format, it chose the cooperative token after both prior cooperation and prior defection: \(P(C \mid prior\ coop)=1.00\), \(P(C \mid prior\ defect)=1.00\), giving a conditionality gap of 0.00. This is unconditional cooperation, not conditional norm learning.
+The tuned model did **not** learn the intended conditional deontological norm. In the original IPD format, it chose the cooperative token after both prior cooperation and prior defection: \(P(C \mid prior\ coop)=1.00\), \(P(C \mid prior\ defect)=1.00\), giving a conditionality gap of 0.00. This is better interpreted as unconditional cooperation than as conditional norm learning.
 
 The new-token IPD suite had a ceiling effect: both base and tuned models chose the cooperative token 100% of the time after both prior states. Natural-language transfer was also hard to interpret because base Gemma2-2b-it was already near ceiling. On natural-language dilemmas, the base model cooperated 100% after prior cooperation and 90% after prior defection; the tuned model cooperated 90% in both cases.
 
 The persona stress test was more informative. Under neutral prompts, base and tuned models were both highly cooperative: 0.80 and 0.90 average cooperation, respectively. Under adversarial personas, the tuned model retained more cooperation in several conditions. Under ruthless-game-theorist prompting, base cooperation fell to 0.25 while the tuned model remained at 0.70. Under villain-roleplay prompting, base cooperation was 0.35 versus 0.60 for the tuned model. Authority pressure showed a smaller difference: 0.65 for base versus 0.85 for the tuned model. The exception was enemy/outgroup framing, where both models collapsed: base cooperation was 0.05 and tuned cooperation was 0.10.
+
+![Persona average cooperation](../results/figures/fig2_persona_avg_cooperation.png)
 
 ## Interpretation
 
