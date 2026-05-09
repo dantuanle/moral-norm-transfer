@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from src.nl_scenarios import load_nl_scenarios
 from src.parse_outputs import parse_choice
 from src.prompts import (
@@ -213,6 +215,28 @@ def add_personas_to_examples(
     return expanded
 
 
+def load_personas(path: str | Path) -> dict[str, str]:
+    """Load persona_id -> persona text mappings from YAML."""
+    persona_path = Path(path)
+    with persona_path.open("r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    if not isinstance(raw, dict):
+        raise ValueError(f"Expected YAML mapping of persona ids to text in {persona_path}")
+
+    personas: dict[str, str] = {}
+    for persona_id, persona_text in raw.items():
+        if not isinstance(persona_id, str) or not persona_id.strip():
+            raise ValueError(f"Persona id must be a non-empty string: {persona_id!r}")
+        if not isinstance(persona_text, str) or not persona_text.strip():
+            raise ValueError(
+                f"Persona text for {persona_id!r} must be a non-empty string"
+            )
+        personas[persona_id.strip()] = persona_text.strip()
+
+    return personas
+
+
 def load_model_and_tokenizer(
     model_name: str,
     adapter_path: str | None = None,
@@ -257,35 +281,59 @@ def generate_one(
     top_p: float = 1.0,
 ) -> str:
     """Generate and decode only the continuation for one prompt."""
-    if callable(getattr(tokenizer, "apply_chat_template", None)) and bool(
-        getattr(tokenizer, "chat_template", None)
-    ):
+    use_chat_template = callable(
+        getattr(tokenizer, "apply_chat_template", None)
+    ) and bool(getattr(tokenizer, "chat_template", None))
+
+    if use_chat_template:
         messages = [{"role": "user", "content": prompt}]
-        input_ids = tokenizer.apply_chat_template(
+        encoded = tokenizer.apply_chat_template(
             messages,
             return_tensors="pt",
             add_generation_prompt=True,
         )
-        inputs = {"input_ids": input_ids}
+        # Tokenizer versions differ: this may be a Tensor or a BatchEncoding/dict.
+        if hasattr(encoded, "shape"):
+            inputs = {"input_ids": encoded}
+        elif isinstance(encoded, dict) or hasattr(encoded, "keys"):
+            inputs = dict(encoded)
+        else:
+            raise TypeError(f"Unexpected chat template output type: {type(encoded)}")
     else:
-        inputs = tokenizer(prompt, return_tensors="pt")
+        inputs = dict(tokenizer(prompt, return_tensors="pt"))
+
+    if "input_ids" not in inputs:
+        raise TypeError(f"Encoded inputs missing input_ids. Keys: {list(inputs.keys())}")
+    if not hasattr(inputs["input_ids"], "shape"):
+        raise TypeError(f"input_ids is not a tensor. Type: {type(inputs['input_ids'])}")
 
     device = _model_device(model)
-    inputs = {key: value.to(device) for key, value in inputs.items()}
+    inputs = {
+        key: value.to(device)
+        for key, value in inputs.items()
+        if hasattr(value, "to")
+    }
+
     input_length = inputs["input_ids"].shape[-1]
 
     generation_kwargs: dict[str, Any] = {
         "max_new_tokens": max_new_tokens,
         "do_sample": do_sample,
     }
-    if getattr(tokenizer, "pad_token_id", None) is None:
+
+    if (
+        getattr(tokenizer, "pad_token_id", None) is None
+        and getattr(tokenizer, "eos_token_id", None) is not None
+    ):
         generation_kwargs["pad_token_id"] = tokenizer.eos_token_id
+
     if do_sample:
         generation_kwargs["temperature"] = temperature
         generation_kwargs["top_p"] = top_p
 
     output_ids = model.generate(**inputs, **generation_kwargs)
     new_token_ids = output_ids[0][input_length:]
+
     return tokenizer.decode(new_token_ids, skip_special_tokens=True).strip()
 
 
@@ -393,6 +441,7 @@ def main() -> None:
     parser.add_argument("--top_p", type=float, default=1.0)
     parser.add_argument("--max_new_tokens", type=int, default=5)
     parser.add_argument("--n_ipd_variants", type=int, default=1)
+    parser.add_argument("--personas_path", default=None)
     args = parser.parse_args()
 
     suites = [suite.strip() for suite in args.suites.split(",") if suite.strip()]
@@ -403,6 +452,13 @@ def main() -> None:
         )
     except ValueError as exc:
         parser.error(str(exc))
+
+    if args.personas_path is not None:
+        try:
+            personas = load_personas(args.personas_path)
+            examples = add_personas_to_examples(examples, personas)
+        except ValueError as exc:
+            parser.error(str(exc))
 
     model, tokenizer = load_model_and_tokenizer(args.model_name, args.adapter_path)
     rows = evaluate_examples(

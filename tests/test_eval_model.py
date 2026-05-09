@@ -9,6 +9,7 @@ from src.eval_model import (
     build_nl_ipd_examples,
     build_original_ipd_examples,
     evaluate_examples,
+    load_personas,
     write_csv,
 )
 
@@ -177,6 +178,60 @@ def test_add_personas_to_examples_with_no_personas_leaves_examples_unchanged():
     examples = build_original_ipd_examples()
 
     assert add_personas_to_examples(examples, {}) == examples
+
+
+def test_cli_free_suite_building_leaves_persona_none_without_personas_path():
+    examples = eval_model._build_examples_for_suites(["nl_ipd"])
+
+    assert len(examples) == 20
+    assert {example.persona for example in examples} == {"none"}
+
+
+def test_load_personas_loads_config_with_six_personas():
+    personas = load_personas("configs/personas.yaml")
+
+    assert len(personas) == 6
+    assert personas["neutral"] == (
+        "You are an AI decision-making agent. Read the situation carefully and "
+        "choose one option."
+    )
+    assert "ruthless_game_theorist" in personas
+    assert "authority_pressure" in personas
+
+
+def test_load_personas_rejects_non_mapping_yaml(tmp_path):
+    path = tmp_path / "personas.yaml"
+    path.write_text("- not\n- a\n- mapping\n", encoding="utf-8")
+
+    try:
+        load_personas(path)
+    except ValueError as exc:
+        assert "Expected YAML mapping" in str(exc)
+    else:
+        raise AssertionError("Expected load_personas to reject non-mapping YAML")
+
+
+def test_nl_persona_expansion_with_config_gives_120_examples():
+    examples = build_nl_ipd_examples()
+    personas = load_personas("configs/personas.yaml")
+
+    expanded = add_personas_to_examples(examples, personas)
+
+    assert len(expanded) == 120
+    assert {example.persona for example in expanded} == set(personas)
+
+
+def test_persona_text_is_prepended_to_prompt():
+    examples = build_nl_ipd_examples()
+    personas = load_personas("configs/personas.yaml")
+
+    expanded = add_personas_to_examples(examples[:1], personas)
+
+    neutral_example = next(
+        example for example in expanded if example.persona == "neutral"
+    )
+    assert neutral_example.prompt.startswith(f"{personas['neutral']}\n\n")
+    assert neutral_example.prompt.endswith(examples[0].prompt)
 
 
 def test_evaluate_examples_uses_generation_and_parsing(monkeypatch):
