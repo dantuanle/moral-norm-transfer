@@ -1,4 +1,4 @@
-# Does Narrow Deontological IPD Supervision Transfer? A Norm-vs-Heuristic Test
+# Does Narrow Deontological Supervision Teach a Norm or a Cooperation Heuristic?
 
 **Dan Le**  
 Mini-project for CAISH Mars V / Agentic Moral Alignment
@@ -7,13 +7,18 @@ Mini-project for CAISH Mars V / Agentic Moral Alignment
 
 Tennant’s *Moral Alignment for LLM Agents* studies whether intrinsic moral rewards can shape the actions of LLM agents in simple game environments. Her CAISH project description asks whether policies learned in these settings generalize beyond the training domain and whether they are robust to persona-prompting. I test two narrow questions. First, if Gemma2-2b-it is supervised on the deontologically preferred action in IPD states where the opponent previously cooperated, does it learn a conditional norm, overgeneralize into unconditional cooperation, or merely learn a surface action-token policy? Second, whatever policy this SFT installs, is it more robust to adversarial persona prompts than the base model?
 
-This is not a PPO replication. I use QLoRA SFT as a rapid baseline for the evaluation question in Tennant’s Project Suggestion #3: before setting up a full RL pipeline, can a compact behavioral-cloning approximation to the deontological action signal install any policy that is robust to adversarial framing? The training target approximates the action-level signal that Tennant’s deontological PPO reward would prefer in cooperative-prior states.
+This is not a PPO replication. I use QLoRA SFT as a deliberately crude SFT proxy for one part of the deontological action signal: in cooperative-prior IPD states, choose the cooperative action. The goal is to build a fast diagnostic baseline for Tennant’s Project Suggestion #3 before setting up a full RL pipeline.
+
+The two project questions are:
+
+1. Does narrow deon-preference SFT learn a conditional norm, or does it overgeneralize into an unconditional cooperation heuristic?
+2. If it installs a heuristic, is that heuristic less sensitive to adversarial persona prompts than the base model?
 
 ## Method
 
 I fine-tuned Gemma2-2b-it on abstract Iterated Prisoner’s Dilemma prompts using arbitrary action tokens. Training examples included only states where the previous opponent action was the cooperative token, `action1`. In those states, Tennant’s deontological norm gives a clear prescription: do not defect against a prior cooperator. The target completion was always `action1`.
 
-I call this **deon-preference SFT** to emphasize that it supervises only the action label the deontological reward would prefer in cooperative-prior states; it is not the full intrinsic reward signal or PPO training process. This setup intentionally creates a possible failure mode: the model may learn “always output `action1`” rather than a conditional norm. I test that directly by evaluating held-out prior-defection states.
+I call this **deon-preference SFT** to emphasize that it supervises only the action label the deontological reward would prefer in cooperative-prior states; it is not the full intrinsic reward signal, not a full deontological theory, and not PPO. This setup intentionally creates a possible failure mode: the model may learn “always output `action1`” rather than a conditional norm. I test that directly by evaluating held-out prior-defection states. Because the model never sees prior-defection states during training, cooperation in those states is evidence of overgeneralization rather than learned conditional reciprocity.
 
 I compare the base and tuned models on three evaluation suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. To test conditionality, I compare cooperation after prior cooperation versus prior defection.
 
@@ -21,19 +26,21 @@ I also run a small persona-prompting stress test on the natural-language dilemma
 
 ## Results
 
-The clearest positive result came from the persona stress test. The tuned model showed smaller cooperation drops from its own neutral baseline under ruthless-game-theorist prompting (tuned -0.20 vs. base -0.55), villain-roleplay (tuned -0.30 vs. base -0.45), and authority-pressure (tuned -0.05 vs. base -0.15). Enemy/outgroup framing was the exception: both models collapsed, with base cooperation at 0.05 and tuned cooperation at 0.10.
+The main diagnostic result is negative: the tuned model did not learn the intended conditional norm. In the original `action1/action2` IPD suite, it chose the cooperative token after both prior cooperation and prior defection: `P(C given prior coop)=1.00`, `P(C given prior defect)=1.00`.
 
-![Persona average cooperation](fig2_persona_avg_cooperation.png)
+In the abstract original-token IPD suite, it behaved like an unconditional cooperation heuristic rather than a conditional deontological policy.
 
-This robustness did not come from learning the intended conditional deontological norm. In the original `action1/action2` IPD suite, the tuned model chose the cooperative token after both prior cooperation and prior defection: `P(C given prior coop)=1.00`, `P(C given prior defect)=1.00`. I interpret this as unconditional cooperation, not conditional norm learning.
-
-Manual inspection showed that the base model’s unusual original-IPD behavior was not a parser artifact. Base Gemma2-2b-it produced clean `action1` / `action2` outputs, but its choices were highly sensitive to minor prompt variants and previous self-action. For example, when `prev_self=action2` and `prev_opp=action1`, it chose `action2` in all five prompt variants. I therefore treat base original-IPD behavior as a prompt-sensitivity diagnostic rather than a stable reciprocal-policy estimate.
+Base original-IPD behavior was also prompt-sensitive rather than a stable reciprocal-policy estimate: Gemma2-2b-it produced clean `action1` / `action2` outputs, but choices shifted with minor prompt variants and previous self-action.
 
 The remaining transfer suites mostly exposed ceiling effects. New-token IPD was uninformative because both base and tuned models chose the cooperative token 100% of the time. Neutral natural-language dilemmas were also near ceiling for the base model, so they did not provide clean evidence of conditional transfer.
 
+The most suggestive secondary result came from the persona stress test. By drop from each model’s own neutral baseline, the tuned model appeared less sensitive to several persona prompts: ruthless-game-theorist (-0.20 vs. base -0.55), villain-roleplay (-0.30 vs. -0.45), and authority-pressure (-0.05 vs. -0.15). Enemy/outgroup framing remained a failure mode for both models, with base cooperation at 0.05 and tuned cooperation at 0.10.
+
+![Persona average cooperation](fig2_persona_avg_cooperation.png)
+
 ## Interpretation
 
-The main negative result is clear: narrow deon-preference SFT did not recover Tennant’s conditional deontological rule. It produced a broad cooperation heuristic. The more interesting positive result is that this heuristic was more resistant than base behavior to several adversarial persona prompts, measured as cooperation drop from each model’s own neutral baseline.
+The useful contribution is an eval scaffold and a concrete falsification of one tempting interpretation of narrow deon-preference SFT: it did not learn conditional reciprocity. In the abstract original-token IPD suite, it behaved like an unconditional cooperation heuristic rather than a conditional deontological policy. The most suggestive secondary result is that this heuristic appeared more resistant than base behavior to several adversarial persona prompts, measured as cooperation drop from each model’s own neutral baseline.
 
 This is preliminary evidence, not a definitive robustness result. Each persona condition contains only 20 hand-written scenarios, and I trained only one deon-preference SFT model. Without selfish-target, utilitarian-target, or generic cooperative SFT controls, I cannot tell whether the robustness gain is specific to the deontological target or would arise from any training procedure that repeatedly reinforces cooperative actions.
 
