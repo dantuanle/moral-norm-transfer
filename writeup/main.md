@@ -31,7 +31,7 @@ The new-token IPD suite had a ceiling effect: both base and tuned models chose t
 
 The persona stress test was more informative. Under neutral prompts, base and tuned models were both highly cooperative: 0.80 and 0.90 average cooperation, respectively. Under adversarial personas, the tuned model retained more cooperation in several conditions. Under ruthless-game-theorist prompting, base cooperation fell to 0.25 while the tuned model remained at 0.70. Under villain-roleplay prompting, base cooperation was 0.35 versus 0.60 for the tuned model. Authority pressure showed a smaller difference: 0.65 for base versus 0.85 for the tuned model. The exception was enemy/outgroup framing, where both models collapsed: base cooperation was 0.05 and tuned cooperation was 0.10.
 
-![Persona average cooperation](../results/figures/fig2_persona_avg_cooperation.png)
+![Persona average cooperation](fig2_persona_avg_cooperation.png)
 
 ## Interpretation
 

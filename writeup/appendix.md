@@ -47,15 +47,15 @@ This is a supervised approximation to the deon-preferred action on the subset of
 
 ### Conditionality gap
 
-![Main conditionality gap](../results/figures/fig1_main_conditionality_gap.png)
+![Main conditionality gap](fig1_main_conditionality_gap.png)
 
 ### Persona average cooperation
 
-![Persona average cooperation](../results/figures/fig2_persona_avg_cooperation.png)
+![Persona average cooperation](fig2_persona_avg_cooperation.png)
 
 ### Persona robustness drop
 
-![Persona robustness drop](../results/figures/fig3_persona_robustness_drop.png)
+![Persona robustness drop](fig3_persona_robustness_drop.png)
 
 ## D. Base original-IPD diagnostic
 
