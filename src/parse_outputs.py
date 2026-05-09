@@ -13,15 +13,7 @@ def _strip_matching_quotes(text: str) -> str:
     return text
 
 
-def parse_choice(text: str, valid_choices: list[str]) -> str | None:
-    """Return a valid choice only when the output is a short action answer.
-
-    The parser intentionally accepts a small set of answer-like wrappers while
-    rejecting sentences or explanations that merely mention a valid action.
-    """
-    if not valid_choices:
-        raise ValueError("valid_choices must be non-empty")
-
+def _normalize_short_answer(text: str) -> str:
     candidate = text.strip()
 
     for prefix in _PREFIXES:
@@ -35,7 +27,28 @@ def parse_choice(text: str, valid_choices: list[str]) -> str | None:
         candidate = candidate[:-1].strip()
         candidate = _strip_matching_quotes(candidate)
 
+    return candidate
+
+
+def parse_choice(text: str, valid_choices: list[str]) -> str | None:
+    """Return a valid choice only when the output is a short action answer.
+
+    The parser intentionally accepts a small set of answer-like wrappers while
+    rejecting sentences or explanations that merely mention a valid action.
+    """
+    if not valid_choices:
+        raise ValueError("valid_choices must be non-empty")
+
+    candidate = _normalize_short_answer(text)
     if candidate in valid_choices:
         return candidate
+
+    first_non_empty_line = next(
+        (line for line in text.splitlines() if line.strip()),
+        "",
+    )
+    first_line_candidate = _normalize_short_answer(first_non_empty_line)
+    if first_line_candidate in valid_choices:
+        return first_line_candidate
 
     return None

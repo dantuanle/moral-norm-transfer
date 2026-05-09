@@ -21,6 +21,22 @@ def test_parse_choice_accepts_short_outputs(text, valid_choices, expected):
 
 
 @pytest.mark.parametrize(
+    ("text", "valid_choices", "expected"),
+    [
+        ("action1\naction", ["action1", "action2"], "action1"),
+        ("action3\naction", ["action3", "action4"], "action3"),
+        ("A\nB", ["A", "B"], "A"),
+        ("\n\nA\nB", ["A", "B"], "A"),
+        ("Answer: action1\naction", ["action1", "action2"], "action1"),
+        ('"action1"\naction', ["action1", "action2"], "action1"),
+        ("A.\nB", ["A", "B"], "A"),
+    ],
+)
+def test_parse_choice_accepts_first_line_exact_choices(text, valid_choices, expected):
+    assert parse_choice(text, valid_choices) == expected
+
+
+@pytest.mark.parametrize(
     "text",
     [
         "I choose action1 because it is better.",
