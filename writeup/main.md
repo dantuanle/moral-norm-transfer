@@ -1,4 +1,4 @@
-# Does Narrow Deontological IPD Supervision Learn a Transferable Norm?
+# Does Narrow Deontological IPD Supervision Transfer? A Norm-vs-Heuristic Test
 
 **Dan Le**  
 Mini-project for CAISH Mars V / Agentic Moral Alignment
@@ -17,15 +17,13 @@ I refer to this as **deon-preference SFT**: it supervises only the action label 
 
 I compare the base and tuned models on three evaluation suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. The main metric is the conditionality gap:
 
-\[
-P(C \mid prior\ coop) - P(C \mid prior\ defect)
-\]
+Conditionality gap = `P(C given prior coop) - P(C given prior defect)`.
 
 I also run a small persona-prompting stress test on the natural-language dilemmas using neutral, ruthless-game-theorist, tournament-maximizer, villain-roleplay, enemy-framing, and authority-pressure prompts.
 
 ## Results
 
-The tuned model did **not** learn the intended conditional deontological norm; it learned to cooperate unconditionally in the abstract IPD format. In the original `action1/action2` IPD suite, the tuned model chose the cooperative token after both prior cooperation and prior defection: \(P(C \mid prior\ coop)=1.00\), \(P(C \mid prior\ defect)=1.00\), giving a conditionality gap of 0.00.
+The tuned model did **not** learn the intended conditional deontological norm; it learned to cooperate unconditionally in the abstract IPD format. In the original `action1/action2` IPD suite, the tuned model chose the cooperative token after both prior cooperation and prior defection: `P(C given prior coop)=1.00`, `P(C given prior defect)=1.00`, giving a conditionality gap of 0.00.
 
 Manual inspection showed that the base model’s unusual original-IPD behavior was not a parser artifact. Base Gemma2-2b-it produced clean `action1` / `action2` outputs, but its choices were highly sensitive to minor prompt variants and previous self-action. For example, when `prev_self=action2` and `prev_opp=action1`, it chose `action2` in all five prompt variants. I therefore treat base original-IPD behavior as a prompt-sensitivity diagnostic rather than a stable reciprocal-policy estimate.
 
@@ -37,9 +35,9 @@ The new-token and natural-language transfer suites mostly exposed ceiling effect
 
 ## Interpretation
 
-The main negative result is clear: narrow deon-preference SFT did not recover Tennant’s conditional deontological rule. It produced a broad cooperation heuristic. The more interesting positive result is that this heuristic appeared more resistant than the base model’s behavior to several adversarial persona prompts.
+The main negative result is clear: narrow deon-preference SFT did not recover Tennant’s conditional deontological rule. It produced a broad cooperation heuristic. The more interesting positive result is that this heuristic was more resistant than base behavior to several adversarial persona prompts, measured as cooperation drop from each model’s own neutral baseline.
 
-I refer to this as preliminary evidence, not a definitive robustness result. Each persona condition contains only 20 hand-written scenarios, and I trained only one deon-preference SFT model. Without selfish-target, utilitarian-target, or generic cooperative SFT controls, I cannot tell whether the robustness gain is specific to the deontological target or would arise from any training procedure that repeatedly reinforces cooperative actions.
+This is preliminary evidence, not a definitive robustness result. Each persona condition contains only 20 hand-written scenarios, and I trained only one deon-preference SFT model. Without selfish-target, utilitarian-target, or generic cooperative SFT controls, I cannot tell whether the robustness gain is specific to the deontological target or would arise from any training procedure that repeatedly reinforces cooperative actions.
 
 ## Next steps
 
