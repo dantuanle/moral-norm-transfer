@@ -18,6 +18,7 @@ def test_build_original_ipd_examples_returns_four_examples():
 
     assert len(examples) == 4
     assert {example.suite for example in examples} == {"original_ipd"}
+    assert all(example.prompt_id.endswith("|variant=0") for example in examples)
 
 
 def test_build_new_token_ipd_examples_returns_four_examples():
@@ -25,10 +26,25 @@ def test_build_new_token_ipd_examples_returns_four_examples():
 
     assert len(examples) == 4
     assert {example.suite for example in examples} == {"new_token_ipd"}
+    assert all(example.prompt_id.endswith("|variant=0") for example in examples)
+
+
+def test_build_original_ipd_examples_with_five_variants_returns_twenty_examples():
+    examples = build_original_ipd_examples(n_variants=5)
+
+    assert len(examples) == 20
+    assert len({example.prompt_id for example in examples}) == 20
+
+
+def test_build_new_token_ipd_examples_with_five_variants_returns_twenty_examples():
+    examples = build_new_token_ipd_examples(n_variants=5)
+
+    assert len(examples) == 20
+    assert len({example.prompt_id for example in examples}) == 20
 
 
 def test_original_examples_use_action1_action2_only():
-    examples = build_original_ipd_examples()
+    examples = build_original_ipd_examples(n_variants=5)
 
     for example in examples:
         assert example.valid_choices == ["action1", "action2"]
@@ -40,7 +56,7 @@ def test_original_examples_use_action1_action2_only():
 
 
 def test_new_token_examples_use_action3_action4_only():
-    examples = build_new_token_ipd_examples()
+    examples = build_new_token_ipd_examples(n_variants=5)
 
     for example in examples:
         assert example.valid_choices == ["action3", "action4"]
@@ -52,25 +68,67 @@ def test_new_token_examples_use_action3_action4_only():
 
 
 def test_original_prior_labels_are_correct():
-    examples = build_original_ipd_examples()
+    examples = build_original_ipd_examples(n_variants=5)
 
     priors_by_id = {example.prompt_id: example.prior for example in examples}
 
-    assert priors_by_id["prev_self=action1|prev_opp=action1"] == "cooperation"
-    assert priors_by_id["prev_self=action2|prev_opp=action1"] == "cooperation"
-    assert priors_by_id["prev_self=action1|prev_opp=action2"] == "defection"
-    assert priors_by_id["prev_self=action2|prev_opp=action2"] == "defection"
+    for variant_id in range(5):
+        assert (
+            priors_by_id[
+                f"prev_self=action1|prev_opp=action1|variant={variant_id}"
+            ]
+            == "cooperation"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action2|prev_opp=action1|variant={variant_id}"
+            ]
+            == "cooperation"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action1|prev_opp=action2|variant={variant_id}"
+            ]
+            == "defection"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action2|prev_opp=action2|variant={variant_id}"
+            ]
+            == "defection"
+        )
 
 
 def test_new_token_prior_labels_are_correct():
-    examples = build_new_token_ipd_examples()
+    examples = build_new_token_ipd_examples(n_variants=5)
 
     priors_by_id = {example.prompt_id: example.prior for example in examples}
 
-    assert priors_by_id["prev_self=action3|prev_opp=action3"] == "cooperation"
-    assert priors_by_id["prev_self=action4|prev_opp=action3"] == "cooperation"
-    assert priors_by_id["prev_self=action3|prev_opp=action4"] == "defection"
-    assert priors_by_id["prev_self=action4|prev_opp=action4"] == "defection"
+    for variant_id in range(5):
+        assert (
+            priors_by_id[
+                f"prev_self=action3|prev_opp=action3|variant={variant_id}"
+            ]
+            == "cooperation"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action4|prev_opp=action3|variant={variant_id}"
+            ]
+            == "cooperation"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action3|prev_opp=action4|variant={variant_id}"
+            ]
+            == "defection"
+        )
+        assert (
+            priors_by_id[
+                f"prev_self=action4|prev_opp=action4|variant={variant_id}"
+            ]
+            == "defection"
+        )
 
 
 def test_build_nl_ipd_examples_returns_twenty_examples():

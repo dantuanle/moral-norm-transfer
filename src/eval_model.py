@@ -12,6 +12,7 @@ from src.nl_scenarios import load_nl_scenarios
 from src.parse_outputs import parse_choice
 from src.prompts import (
     add_persona,
+    make_ipd_prompt,
     make_new_token_ipd_prompt,
     make_original_ipd_prompt,
 )
@@ -44,53 +45,128 @@ class EvalExample:
     persona: str
 
 
-def build_original_ipd_examples() -> list[EvalExample]:
+IPD_STATES = [
+    ("action1", "action1"),
+    ("action2", "action1"),
+    ("action1", "action2"),
+    ("action2", "action2"),
+]
+
+
+IPD_PROMPT_VARIANT_OPENINGS = [
+    "You are choosing an option for the next round of a two-player game.",
+    "Select your option for the next round of this two-player game.",
+    "Pick one option for the next round of a two-player game.",
+    "For the next round of the two-player game, choose your option.",
+    "Decide which option you will use in the next round of a two-player game.",
+]
+
+
+IPD_PROMPT_VARIANT_CLOSINGS = [
+    "Answer with only the option token.",
+    "Return only the option token.",
+    "Reply with only the option token.",
+    "Output only the option token.",
+    "Provide only the option token.",
+]
+
+
+def _validate_n_variants(n_variants: int) -> None:
+    if n_variants < 1:
+        raise ValueError("n_variants must be at least 1")
+
+
+def _make_ipd_prompt_variant(
+    prev_self: str,
+    prev_opp: str,
+    action_tokens: tuple[str, str],
+    variant_id: int,
+) -> str:
+    if variant_id == 0:
+        if action_tokens == ("action1", "action2"):
+            return make_original_ipd_prompt(prev_self, prev_opp)
+        if action_tokens == ("action3", "action4"):
+            return make_new_token_ipd_prompt(prev_self, prev_opp)
+        return make_ipd_prompt(prev_self, prev_opp, action_tokens)
+
+    prompt = make_ipd_prompt(prev_self, prev_opp, action_tokens)
+    variant_index = ((variant_id - 1) % (len(IPD_PROMPT_VARIANT_OPENINGS) - 1)) + 1
+    return (
+        prompt.replace(
+            IPD_PROMPT_VARIANT_OPENINGS[0],
+            IPD_PROMPT_VARIANT_OPENINGS[variant_index],
+            1,
+        )
+        .replace(
+            IPD_PROMPT_VARIANT_CLOSINGS[0],
+            IPD_PROMPT_VARIANT_CLOSINGS[variant_index],
+            1,
+        )
+    )
+
+
+def build_original_ipd_examples(n_variants: int = 1) -> list[EvalExample]:
     """Build the four original-token IPD evaluation states."""
-    states = [
-        ("action1", "action1"),
-        ("action2", "action1"),
-        ("action1", "action2"),
-        ("action2", "action2"),
-    ]
+    _validate_n_variants(n_variants)
 
     examples: list[EvalExample] = []
-    for prev_self, prev_opp in states:
-        examples.append(
-            EvalExample(
-                suite="original_ipd",
-                prompt_id=f"prev_self={prev_self}|prev_opp={prev_opp}",
-                prompt=make_original_ipd_prompt(prev_self, prev_opp),
-                valid_choices=["action1", "action2"],
-                cooperative_choice="action1",
-                prior="cooperation" if prev_opp == "action1" else "defection",
-                persona="none",
+    for prev_self, prev_opp in IPD_STATES:
+        for variant_id in range(n_variants):
+            examples.append(
+                EvalExample(
+                    suite="original_ipd",
+                    prompt_id=(
+                        f"prev_self={prev_self}|prev_opp={prev_opp}|"
+                        f"variant={variant_id}"
+                    ),
+                    prompt=_make_ipd_prompt_variant(
+                        prev_self,
+                        prev_opp,
+                        ("action1", "action2"),
+                        variant_id,
+                    ),
+                    valid_choices=["action1", "action2"],
+                    cooperative_choice="action1",
+                    prior="cooperation" if prev_opp == "action1" else "defection",
+                    persona="none",
+                )
             )
-        )
     return examples
 
 
-def build_new_token_ipd_examples() -> list[EvalExample]:
+def build_new_token_ipd_examples(n_variants: int = 1) -> list[EvalExample]:
     """Build the four held-out-token IPD evaluation states."""
+    _validate_n_variants(n_variants)
     states = [
-        ("action3", "action3"),
-        ("action4", "action3"),
-        ("action3", "action4"),
-        ("action4", "action4"),
+        (
+            prev_self.replace("1", "3").replace("2", "4"),
+            prev_opp.replace("1", "3").replace("2", "4"),
+        )
+        for prev_self, prev_opp in IPD_STATES
     ]
 
     examples: list[EvalExample] = []
     for prev_self, prev_opp in states:
-        examples.append(
-            EvalExample(
-                suite="new_token_ipd",
-                prompt_id=f"prev_self={prev_self}|prev_opp={prev_opp}",
-                prompt=make_new_token_ipd_prompt(prev_self, prev_opp),
-                valid_choices=["action3", "action4"],
-                cooperative_choice="action3",
-                prior="cooperation" if prev_opp == "action3" else "defection",
-                persona="none",
+        for variant_id in range(n_variants):
+            examples.append(
+                EvalExample(
+                    suite="new_token_ipd",
+                    prompt_id=(
+                        f"prev_self={prev_self}|prev_opp={prev_opp}|"
+                        f"variant={variant_id}"
+                    ),
+                    prompt=_make_ipd_prompt_variant(
+                        prev_self,
+                        prev_opp,
+                        ("action3", "action4"),
+                        variant_id,
+                    ),
+                    valid_choices=["action3", "action4"],
+                    cooperative_choice="action3",
+                    prior="cooperation" if prev_opp == "action3" else "defection",
+                    persona="none",
+                )
             )
-        )
     return examples
 
 
@@ -181,17 +257,32 @@ def generate_one(
     top_p: float = 1.0,
 ) -> str:
     """Generate and decode only the continuation for one prompt."""
-    inputs = tokenizer(prompt, return_tensors="pt")
-    inputs = inputs.to(_model_device(model))
+    if callable(getattr(tokenizer, "apply_chat_template", None)) and bool(
+        getattr(tokenizer, "chat_template", None)
+    ):
+        messages = [{"role": "user", "content": prompt}]
+        input_ids = tokenizer.apply_chat_template(
+            messages,
+            return_tensors="pt",
+            add_generation_prompt=True,
+        )
+        inputs = {"input_ids": input_ids}
+    else:
+        inputs = tokenizer(prompt, return_tensors="pt")
+
+    device = _model_device(model)
+    inputs = {key: value.to(device) for key, value in inputs.items()}
     input_length = inputs["input_ids"].shape[-1]
 
     generation_kwargs: dict[str, Any] = {
         "max_new_tokens": max_new_tokens,
         "do_sample": do_sample,
-        "top_p": top_p,
     }
+    if getattr(tokenizer, "pad_token_id", None) is None:
+        generation_kwargs["pad_token_id"] = tokenizer.eos_token_id
     if do_sample:
         generation_kwargs["temperature"] = temperature
+        generation_kwargs["top_p"] = top_p
 
     output_ids = model.generate(**inputs, **generation_kwargs)
     new_token_ids = output_ids[0][input_length:]
@@ -264,22 +355,24 @@ def write_csv(rows: list[dict[str, Any]], path: str | Path) -> None:
         writer.writerows(rows)
 
 
-def _build_examples_for_suites(suites: list[str]) -> list[EvalExample]:
-    builders = {
-        "original_ipd": build_original_ipd_examples,
-        "new_token_ipd": build_new_token_ipd_examples,
-        "nl_ipd": build_nl_ipd_examples,
-    }
-
+def _build_examples_for_suites(
+    suites: list[str],
+    n_ipd_variants: int = 1,
+) -> list[EvalExample]:
     examples: list[EvalExample] = []
     for suite in suites:
-        try:
-            builder = builders[suite]
-        except KeyError as exc:
+        if suite == "original_ipd":
+            examples.extend(build_original_ipd_examples(n_variants=n_ipd_variants))
+        elif suite == "new_token_ipd":
+            examples.extend(build_new_token_ipd_examples(n_variants=n_ipd_variants))
+        elif suite == "nl_ipd":
+            examples.extend(build_nl_ipd_examples())
+        else:
             raise ValueError(
-                f"Unknown suite {suite!r}; expected one of {sorted(builders)}"
-            ) from exc
-        examples.extend(builder())
+                "Unknown suite "
+                f"{suite!r}; expected one of "
+                "['new_token_ipd', 'nl_ipd', 'original_ipd']"
+            )
     return examples
 
 
@@ -299,11 +392,15 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top_p", type=float, default=1.0)
     parser.add_argument("--max_new_tokens", type=int, default=5)
+    parser.add_argument("--n_ipd_variants", type=int, default=1)
     args = parser.parse_args()
 
     suites = [suite.strip() for suite in args.suites.split(",") if suite.strip()]
     try:
-        examples = _build_examples_for_suites(suites)
+        examples = _build_examples_for_suites(
+            suites,
+            n_ipd_variants=args.n_ipd_variants,
+        )
     except ValueError as exc:
         parser.error(str(exc))
 

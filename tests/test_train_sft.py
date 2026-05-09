@@ -56,7 +56,7 @@ def test_load_config_reads_expected_sft_config():
     assert config["val_path"] == "data/train/deon_sft_val.jsonl"
     assert config["output_dir"] == "checkpoints/gemma2_deon_sft_final"
     assert config["max_seq_length"] == 1024
-    assert config["learning_rate"] == pytest.approx(1.0e-4)
+    assert config["learning_rate"] == pytest.approx(2.0e-4)
     assert config["target_modules"] == ["q_proj", "k_proj", "v_proj", "o_proj"]
 
 
