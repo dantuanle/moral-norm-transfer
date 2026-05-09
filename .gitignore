@@ -14,3 +14,12 @@ results/raw/*
 !results/raw/.gitkeep
 
 .DS_Store
+
+# Local editor settings
+.vscode/
+
+# Smoke-test data
+data/train/*smoke*.jsonl
+
+# Duplicate/local writeup figure folder
+writeup/figures/
