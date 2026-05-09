@@ -15,23 +15,21 @@ I fine-tuned Gemma2-2b-it on abstract Iterated Prisoner’s Dilemma prompts usin
 
 I call this **deon-preference SFT** to emphasize that it supervises only the action label the deontological reward would prefer in cooperative-prior states; it is not the full intrinsic reward signal or PPO training process. This setup intentionally creates a possible failure mode: the model may learn “always output `action1`” rather than a conditional norm. I test that directly by evaluating held-out prior-defection states.
 
-I compare the base and tuned models on three evaluation suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. The main metric is the conditionality gap:
-
-Conditionality gap = `P(C given prior coop) - P(C given prior defect)`.
+I compare the base and tuned models on three evaluation suites: original `action1/action2` IPD prompts, new-token `action3/action4` IPD prompts, and 20 natural-language reciprocal dilemmas with cooperative labels balanced between A and B. To test conditionality, I compare cooperation after prior cooperation versus prior defection.
 
 I also run a small persona-prompting stress test on the natural-language dilemmas using neutral, ruthless-game-theorist, tournament-maximizer, villain-roleplay, enemy-framing, and authority-pressure prompts.
 
 ## Results
 
-The tuned model did **not** learn the intended conditional deontological norm; it learned to cooperate unconditionally in the abstract IPD format. In the original `action1/action2` IPD suite, the tuned model chose the cooperative token after both prior cooperation and prior defection: `P(C given prior coop)=1.00`, `P(C given prior defect)=1.00`, giving a conditionality gap of 0.00.
-
-Manual inspection showed that the base model’s unusual original-IPD behavior was not a parser artifact. Base Gemma2-2b-it produced clean `action1` / `action2` outputs, but its choices were highly sensitive to minor prompt variants and previous self-action. For example, when `prev_self=action2` and `prev_opp=action1`, it chose `action2` in all five prompt variants. I therefore treat base original-IPD behavior as a prompt-sensitivity diagnostic rather than a stable reciprocal-policy estimate.
-
-Given that SFT installed an unconditional-cooperation heuristic rather than a conditional norm, the persona stress test asks whether that heuristic is sticky under adversarial framing. The tuned model showed smaller cooperation drops from its own neutral baseline under ruthless-game-theorist prompting (tuned -0.20 vs. base -0.55), villain-roleplay (tuned -0.30 vs. base -0.45), and authority-pressure (tuned -0.05 vs. base -0.15). Enemy/outgroup framing was the exception: both models collapsed, with base cooperation at 0.05 and tuned cooperation at 0.10.
+The clearest positive result came from the persona stress test. The tuned model showed smaller cooperation drops from its own neutral baseline under ruthless-game-theorist prompting (tuned -0.20 vs. base -0.55), villain-roleplay (tuned -0.30 vs. base -0.45), and authority-pressure (tuned -0.05 vs. base -0.15). Enemy/outgroup framing was the exception: both models collapsed, with base cooperation at 0.05 and tuned cooperation at 0.10.
 
 ![Persona average cooperation](fig2_persona_avg_cooperation.png)
 
-The new-token and natural-language transfer suites mostly exposed ceiling effects. In the new-token IPD suite, both base and tuned models chose the cooperative token 100% of the time. In neutral natural-language dilemmas, base Gemma2-2b-it was already highly cooperative: 1.00 after prior cooperation and 0.90 after prior defection. The tuned model cooperated 0.90 in both cases, so this suite did not provide clean evidence of conditional transfer.
+This robustness did not come from learning the intended conditional deontological norm. In the original `action1/action2` IPD suite, the tuned model chose the cooperative token after both prior cooperation and prior defection: `P(C given prior coop)=1.00`, `P(C given prior defect)=1.00`. I interpret this as unconditional cooperation, not conditional norm learning.
+
+Manual inspection showed that the base model’s unusual original-IPD behavior was not a parser artifact. Base Gemma2-2b-it produced clean `action1` / `action2` outputs, but its choices were highly sensitive to minor prompt variants and previous self-action. For example, when `prev_self=action2` and `prev_opp=action1`, it chose `action2` in all five prompt variants. I therefore treat base original-IPD behavior as a prompt-sensitivity diagnostic rather than a stable reciprocal-policy estimate.
+
+The remaining transfer suites mostly exposed ceiling effects. New-token IPD was uninformative because both base and tuned models chose the cooperative token 100% of the time. Neutral natural-language dilemmas were also near ceiling for the base model, so they did not provide clean evidence of conditional transfer.
 
 ## Interpretation
 
